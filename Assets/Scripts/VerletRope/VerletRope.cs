@@ -46,6 +46,7 @@ public class VerletRope : MonoBehaviour
             line.SetPositions(pos);
         
         if (attachBody)
+            mass[pointsNb - 1] = attachBody.mass;
             attachBody.MovePosition(pos[pointsNb - 1]);
     }
 
@@ -68,7 +69,6 @@ public class VerletRope : MonoBehaviour
         foreach (int point in attachPoints.Keys)
         {
             if (point >= 0 && point < pointsNb) {
-                mass[point] = 0.0f;
                 pos[point] = attachPoints[point].position;
             }
         }
