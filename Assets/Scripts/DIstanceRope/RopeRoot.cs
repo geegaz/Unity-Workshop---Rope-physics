@@ -76,7 +76,7 @@ public class RopeRoot : MonoBehaviour
     public void UpdateLine() {
         if (line == null) return;
 
-        for (int pointIndex = 0; pointIndex < points.Count - 1; pointIndex++) {
+        for (int pointIndex = 0; pointIndex < points.Count; pointIndex++) {
             line.SetPosition(pointIndex, points[pointIndex].position);
         }
     }
