@@ -145,6 +145,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attachPoint: {fileID: 0}
+  attachBody: {fileID: 0}
   pointsNb: 20
   constraintDistance: 0.1
-  constraintIterations: 10
+  constraintIterations: 80

@@ -7,7 +7,10 @@ public class VerletRope : MonoBehaviour
     [Header("Rope")]
     [SerializeField]
     private Transform attachPoint;
+    [SerializeField]
     private Rigidbody attachBody;
+
+    public Dictionary<int, Transform> attachPoints = new Dictionary<int, Transform>();
     
     Vector3[] pos;
     Vector3[] prevPos;
@@ -23,27 +26,27 @@ public class VerletRope : MonoBehaviour
 
     private void Awake() {
         line = GetComponent<LineRenderer>();
-        if (attachPoint != null) 
-            attachBody = attachPoint.GetComponent<Rigidbody>();
     }
 
     private void Start() {
         CreatePoints();
+
+        attachPoints.Add(0, transform);
+        if (attachPoint) attachPoints.Add(pointsNb - 1, attachPoint);
     }
 
     private void FixedUpdate() {
         if (pointsNb > 1) {
             ApplyVerlet();
             ApplyConstraints();
-
-            pos[0] = transform.position;
-            if (attachPoint) {
-                pos[pointsNb - 1] = attachPoint.position;
-            }
+            ApplyAttach();
         }
 
         if (line)
             line.SetPositions(pos);
+        
+        if (attachBody)
+            attachBody.MovePosition(pos[pointsNb - 1]);
     }
 
     private void CreatePoints() {
@@ -56,13 +59,19 @@ public class VerletRope : MonoBehaviour
             pos[i] = Vector3.Lerp(transform.position, targetPos, (float)i / (pointsNb - 1));
             prevPos[i] = pos[i];
             mass[i] = 1.0f;
-
-            Debug.Log(pos[i] + " " + prevPos[i]);
         }
 
-        mass[0] = 0.0f;
-        if (attachPoint) mass[pointsNb - 1] = 0.0f;
         if (line) line.positionCount = pointsNb;
+    }
+
+    private void ApplyAttach() {
+        foreach (int point in attachPoints.Keys)
+        {
+            if (point >= 0 && point < pointsNb) {
+                mass[point] = 0.0f;
+                pos[point] = attachPoints[point].position;
+            }
+        }
     }
 
     private void ApplyVerlet() {
@@ -93,13 +102,13 @@ public class VerletRope : MonoBehaviour
                 // invmass1 = InverseMass(mass[i - 1]);
                 // invmass2 = InverseMass(mass[i]);
                 // diff = (length - constraintDistance) / (length * (invmass1 + invmass2));
-                // pos[i - 1] -= delta * diff * invmass1;
-                // pos[i] += delta * diff * invmass2;
+                // pos[i] -= delta * diff * invmass2;
+                // pos[i - 1] += delta * diff * invmass1;
             }
         }
     }
 
     private static float InverseMass(float mass) {
-        return mass == 0.0f ? float.PositiveInfinity : 1.0f / mass;
+        return mass == 0.0f ? 1000000000.0f : 1.0f / mass;
     }
 }
