@@ -25,13 +25,22 @@ public class DistanceConstraint : MonoBehaviour
 
     public static void ApplyConstraint(Rigidbody b1, Rigidbody b2, float distance) {
         Vector3 vec = b2.position - b1.position;
-        float difference = (distance - vec.magnitude) / vec.magnitude;
+        float invmass1 = InverseMass(b1);
+        float invmass2 = InverseMass(b2);
+        float length = vec.magnitude;
+        float difference = (length - distance) / (length * (invmass1 + invmass2));
+        Vector3 move1 = vec * difference * invmass1;
+        Vector3 move2 = vec * difference * invmass2;
         
-        b1.velocity = b1.velocity - vec * difference * 0.5f;
-        b2.velocity = b2.velocity + vec * difference * 0.5f;
+        if (!b1.isKinematic) {
+            b1.velocity += move1;
+        }
+        if (!b2.isKinematic) {
+            b2.velocity -= move2;
+        }
     }
 
     private static float InverseMass(Rigidbody body){
-        return (body.mass == 0.0 ? float.PositiveInfinity : 1.0f);
+        return (body.mass == 0.0 ? 0.00000001f : 1.0f);
     }
 }

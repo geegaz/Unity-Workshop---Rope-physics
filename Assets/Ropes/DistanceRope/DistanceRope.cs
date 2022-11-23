@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class RopeRoot : MonoBehaviour
+public class DistanceRope : MonoBehaviour
 {
     public Rigidbody attach;
 
