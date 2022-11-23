@@ -27,10 +27,10 @@ public class CameraMover : MonoBehaviour
 
         if (time >= 0.0f) {
             if (cam != null) {
-                cam.transform.position = Vector3.Lerp(cam.transform.position, targets[currentTarget].position, time);
-                cam.transform.rotation = Quaternion.Lerp(cam.transform.rotation, targets[currentTarget].rotation, time);
+                cam.transform.position = Vector3.Lerp(cam.transform.position, targets[currentTarget].position, 1.0f - time);
+                cam.transform.rotation = Quaternion.Lerp(cam.transform.rotation, targets[currentTarget].rotation, 1.0f - time);
             }
-            time -= Time.deltaTime;
+            time -= Time.deltaTime * travelingSpeed;
         }
     }
 }
