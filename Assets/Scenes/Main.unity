@@ -1270,12 +1270,12 @@ PrefabInstance:
     - target: {fileID: 3563362856402344548, guid: e5e0498ed1784ee45985f89ef7c5d120,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.5
+      value: 3.82
       objectReference: {fileID: 0}
     - target: {fileID: 3563362856402344548, guid: e5e0498ed1784ee45985f89ef7c5d120,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5
+      value: 4.84
       objectReference: {fileID: 0}
     - target: {fileID: 3563362856402344548, guid: e5e0498ed1784ee45985f89ef7c5d120,
         type: 3}
@@ -1322,6 +1322,16 @@ PrefabInstance:
       propertyPath: attachBody
       value: 
       objectReference: {fileID: 1258496708}
+    - target: {fileID: 3563362856402344549, guid: e5e0498ed1784ee45985f89ef7c5d120,
+        type: 3}
+      propertyPath: attachedBody
+      value: 
+      objectReference: {fileID: 1258496708}
+    - target: {fileID: 3563362856402344549, guid: e5e0498ed1784ee45985f89ef7c5d120,
+        type: 3}
+      propertyPath: attachedBodiesDamping
+      value: 0.8
+      objectReference: {fileID: 0}
     - target: {fileID: 3563362856402344570, guid: e5e0498ed1784ee45985f89ef7c5d120,
         type: 3}
       propertyPath: m_Name
@@ -1358,7 +1368,7 @@ Rigidbody:
   m_GameObject: {fileID: 1258496707}
   serializedVersion: 2
   m_Mass: 1
-  m_Drag: 0
+  m_Drag: 0.2
   m_AngularDrag: 0.05
   m_UseGravity: 1
   m_IsKinematic: 1
