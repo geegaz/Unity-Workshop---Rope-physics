@@ -50,6 +50,7 @@ public class DistanceRope : MonoBehaviour
             Vector3 position = Vector3.Lerp(transform.position, targetPosition, (float)i / (ropePointAmount - 1));
             Rigidbody newPoint = Instantiate(ropePointPrefab, position, transform.rotation);
             newPoint.transform.localScale *= ropePointScale;
+            newPoint.velocity = Vector3.zero;
             points.Add(newPoint);
         }
         if (line != null) line.positionCount = points.Count;
