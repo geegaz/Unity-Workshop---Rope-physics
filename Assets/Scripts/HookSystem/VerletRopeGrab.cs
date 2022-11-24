@@ -15,34 +15,34 @@ public class VerletRopeGrab : XRSimpleInteractable
 
     private void Start() {
         if (grabRope != null) {
-            transform.localScale = Vector3.one * grabRange;
             grabRope.AttachPoint(0, grabRope.transform);
         }
     }
 
-    private void FixedUpdate() {
+    private void Update() {
         if (grabHand != null && grabRope != null) {
-            if (grabbedPoint == null) {
+            if (grabbedPoint != null) {
+                transform.position = grabHand.position;
+            } else {
                 closestPointID = grabRope.GetClosestPoint(grabHand.position, grabRange);
                 if (closestPointID >= 0) {
                     transform.position = grabRope.prevPos[closestPointID];
                 } else {
                     transform.position = grabRope.transform.position;
                 }
-            } else {
-                transform.position = grabHand.position;
             }
         }
     }
 
     public void TryGrab(SelectEnterEventArgs args) {
-       if (closestPointID >= 0 && args.interactorObject.transform == grabHand) {
+       if (closestPointID > 0 && args.interactorObject.transform == grabHand) {
             grabbedPoint = grabRope.AttachPoint(closestPointID, transform);
-        } 
+            
+        }
     }
 
     public void TryThrow(SelectExitEventArgs args) {
-        if (grabbedPoint != null && args.interactorObject.transform == grabHand) {
+        if (grabbedPoint != null) {
             grabRope.DetachPoint(grabbedPoint);
             grabbedPoint = null;
         }

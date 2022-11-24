@@ -81,7 +81,6 @@ public class VerletRope : MonoBehaviour
     }
 
     public AttachedPoint AttachPoint(int id, Transform attach) {
-        if (id < 0) id = attachedPoints.Count + id;
         foreach (AttachedPoint point in attachedPoints)
         {
             if (point.id == id) {
@@ -97,14 +96,15 @@ public class VerletRope : MonoBehaviour
 
     public void DetachPoint(AttachedPoint point) {
         attachedPoints.Remove(point);
+        mass[point.id] = 1.0f;
     }
 
-    public void DetachPointID(int id) {
-        if (id < 0) id = attachedPoints.Count + id;
+    public void DetachPoint(int id) {
         int i = 0;
-        while (i < attachedPoints.Count) {
-            if (attachedPoints[i].id == id) {
-                attachedPoints.RemoveAt(i);
+        foreach (AttachedPoint point in attachedPoints)
+        {
+            if (point.id == id) {
+                DetachPoint(point);
                 return;
             }
         }
