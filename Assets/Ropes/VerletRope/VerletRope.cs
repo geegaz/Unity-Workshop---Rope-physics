@@ -184,6 +184,7 @@ public class VerletRope : MonoBehaviour
             if (body != null && !body.isKinematic) {
                 mass[point.id] = body.mass;
                 body.velocity += point.force * attachedBodiesDamping;
+                //body.position += point.force;
             }
         }
     }
