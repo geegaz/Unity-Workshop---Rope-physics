@@ -10,9 +10,7 @@ public class VerletRope : MonoBehaviour
     public class AttachedPoint {
         public int id = 0;
         public Transform transform;
-        
-        [HideInInspector]
-        public Vector3 force = Vector3.zero;
+        [HideInInspector] public Vector3 force = Vector3.zero;
 
         public AttachedPoint(int _id, Transform _transform) {
             id = _id;
@@ -25,19 +23,18 @@ public class VerletRope : MonoBehaviour
     }
     
     [Header("Rope")]
-    [SerializeField]
-    private float attachedBodiesDamping = 0.8f;
+    [SerializeField] private float attachedBodiesDamping = 0.8f;
 
-    [SerializeField]
-    private List<AttachedPoint> attachedPoints = new List<AttachedPoint>();
+    [SerializeField] private List<AttachedPoint> attachedPoints = new List<AttachedPoint>();
     
-    private Vector3[] pos;
-    private Vector3[] prevPos;
-    private float[] mass;
+    [HideInInspector] public Vector3[] pos;
+    [HideInInspector] public Vector3[] prevPos;
+    [HideInInspector] public float[] mass;
 
     [Header("Constraints")]
 
     public float constraintHeightMin = 0.01f;
+    public float constraintHeightFriction = 0.5f;
     public float constraintDistance = 0.1f;
     public int constraintDistanceIterations = 20;
 
@@ -69,12 +66,10 @@ public class VerletRope : MonoBehaviour
         prevPos = new Vector3[pointsNb];
         mass = new float[pointsNb];
 
-        Vector3 targetPos;
+        Vector3 targetPos = transform.position + Physics.gravity.normalized * (constraintDistance * pointsNb);
         if (attachedPoints.Count > 1) {
             AttachedPoint lastPoint = attachedPoints[attachedPoints.Count - 1];
-            targetPos = lastPoint.transform.position;
-        } else {
-            targetPos = transform.position + Physics.gravity.normalized * (constraintDistance * pointsNb);
+            if (lastPoint.IsValid(pointsNb)) targetPos = lastPoint.transform.position;
         }
         for (int i = 0; i < pointsNb; i ++) {
             pos[i] = Vector3.Lerp(transform.position, targetPos, (float)i / (pointsNb - 1));
@@ -85,20 +80,26 @@ public class VerletRope : MonoBehaviour
         if (line) line.positionCount = pointsNb;
     }
 
-    public void AttachPoint(int id, Transform attach) {
+    public AttachedPoint AttachPoint(int id, Transform attach) {
         if (id < 0) id = attachedPoints.Count + id;
         foreach (AttachedPoint point in attachedPoints)
         {
             if (point.id == id) {
                 point.transform = attach;
                 point.force = Vector3.zero;
-                return;
+                return point;
             }
         }
-        attachedPoints.Add(new AttachedPoint(id, attach));
+        AttachedPoint newPoint = new AttachedPoint(id, attach);
+        attachedPoints.Add(newPoint);
+        return newPoint;
     }
 
-    public void DetachPoint(int id) {
+    public void DetachPoint(AttachedPoint point) {
+        attachedPoints.Remove(point);
+    }
+
+    public void DetachPointID(int id) {
         if (id < 0) id = attachedPoints.Count + id;
         int i = 0;
         while (i < attachedPoints.Count) {
@@ -107,6 +108,21 @@ public class VerletRope : MonoBehaviour
                 return;
             }
         }
+    }
+
+    public int GetClosestPoint(Vector3 targetPos, float range = float.PositiveInfinity) {
+        float distance;
+        float distanceMin = range;
+        int pointMin = -1;
+        for (int i = 0; i < pointsNb; i++)
+        {
+            distance = Vector3.Distance(targetPos, pos[i]);
+            if (distance < distanceMin) {
+                distanceMin = distance;
+                pointMin = i;
+            }
+        }
+        return pointMin;
     }
 
     private float GetConstraint(int p1, int p2, float distance, Vector3[] constraint, bool useMass = true) {
@@ -142,7 +158,10 @@ public class VerletRope : MonoBehaviour
         Vector3[] constraint = new Vector3[2];
         for (int iteration = 0; iteration < constraintDistanceIterations; iteration++) {
             for (int i = 1; i < pointsNb; i++) {
-                pos[i].y = Mathf.Max(pos[i].y, constraintHeightMin);
+                if (pos[i].y < constraintHeightMin) {
+                    prevPos[i] = Vector3.Lerp(prevPos[i], pos[i], constraintHeightFriction);
+                    pos[i].y = constraintHeightMin;
+                }
 
                 float diff = GetConstraint(i-1, i, constraintDistance, constraint);
                 pos[i - 1] += constraint[0];
