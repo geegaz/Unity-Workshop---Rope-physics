@@ -23,7 +23,7 @@ public class VerletRope : MonoBehaviour
     }
     
     [Header("Rope")]
-    [SerializeField] private float attachedBodiesDamping = 0.8f;
+    [SerializeField] private float attachedBodiesDamping = 0.5f;
 
     [SerializeField] private List<AttachedPoint> attachedPoints = new List<AttachedPoint>();
     
@@ -35,6 +35,8 @@ public class VerletRope : MonoBehaviour
 
     public float constraintHeightMin = 0.01f;
     public float constraintHeightFriction = 0.5f;
+
+    [Space]
     public float constraintDistance = 0.1f;
     public int constraintDistanceIterations = 20;
 

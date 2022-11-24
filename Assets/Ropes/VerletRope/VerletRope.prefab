@@ -145,11 +145,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pointsNb: 20
-  attachedBodiesDamping: 0.8
+  attachedBodiesDamping: 0.5
   attachedPoints: []
   pos: []
   prevPos: []
   mass: []
   constraintHeightMin: 0.01
+  constraintHeightFriction: 0.5
   constraintDistance: 0.1
   constraintDistanceIterations: 20

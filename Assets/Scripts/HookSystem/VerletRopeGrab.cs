@@ -8,7 +8,7 @@ public class VerletRopeGrab : XRSimpleInteractable
     [Header("Grabbing")]
     public Transform grabHand;
     public VerletRope grabRope;
-    [SerializeField] private float grabRange = 0.1f;
+    [SerializeField] private float grabRange = 0.2f;
 
     private VerletRope.AttachedPoint grabbedPoint = null;
     private int closestPointID = -1;
@@ -26,7 +26,7 @@ public class VerletRopeGrab : XRSimpleInteractable
             } else {
                 closestPointID = grabRope.GetClosestPoint(grabHand.position, grabRange);
                 if (closestPointID >= 0) {
-                    transform.position = grabRope.prevPos[closestPointID];
+                    transform.position = grabRope.pos[closestPointID];
                 } else {
                     transform.position = grabRope.transform.position;
                 }
