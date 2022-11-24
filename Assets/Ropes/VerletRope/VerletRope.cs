@@ -4,24 +4,42 @@ using UnityEngine;
 
 public class VerletRope : MonoBehaviour
 {
+    public int pointsNb = 20;
+    
+    [System.Serializable]
+    public class AttachedPoint {
+        public int id = 0;
+        public Transform transform;
+        
+        [HideInInspector]
+        public Vector3 force = Vector3.zero;
+
+        public AttachedPoint(int _id, Transform _transform) {
+            id = _id;
+            transform = _transform;
+        }
+
+        public bool IsValid(int maxPoints = 0) {
+            return !(id < 0 || id >= maxPoints || transform == null);
+        }
+    }
+    
     [Header("Rope")]
-    [SerializeField]
-    private Rigidbody attachedBody;
     [SerializeField]
     private float attachedBodiesDamping = 0.8f;
 
-    private SortedDictionary<int, Transform> pointsAttach = new SortedDictionary<int, Transform>();
-    private Dictionary<int, Vector3> pointsForce = new Dictionary<int, Vector3>();
+    [SerializeField]
+    private List<AttachedPoint> attachedPoints = new List<AttachedPoint>();
     
     private Vector3[] pos;
     private Vector3[] prevPos;
     private float[] mass;
-    
-    public int pointsNb = 20;
 
     [Header("Constraints")]
+
+    public float constraintHeightMin = 0.01f;
     public float constraintDistance = 0.1f;
-    public int constraintIterations = 10;
+    public int constraintDistanceIterations = 20;
 
     private LineRenderer line;
 
@@ -35,11 +53,11 @@ public class VerletRope : MonoBehaviour
 
     private void FixedUpdate() {
         if (pointsNb > 1) {
+            ApplyForces();
+            ApplyAttach();
+            
             ApplyVerlet();
             ApplyConstraints();
-            
-            ApplyAttach();
-            ApplyForces();
         }
 
         if (line)
@@ -51,86 +69,62 @@ public class VerletRope : MonoBehaviour
         prevPos = new Vector3[pointsNb];
         mass = new float[pointsNb];
 
-        Vector3 targetPos = attachedBody ? attachedBody.position : transform.position + Physics.gravity.normalized * (constraintDistance * pointsNb);
+        Vector3 targetPos;
+        if (attachedPoints.Count > 1) {
+            AttachedPoint lastPoint = attachedPoints[attachedPoints.Count - 1];
+            targetPos = lastPoint.transform.position;
+        } else {
+            targetPos = transform.position + Physics.gravity.normalized * (constraintDistance * pointsNb);
+        }
         for (int i = 0; i < pointsNb; i ++) {
             pos[i] = Vector3.Lerp(transform.position, targetPos, (float)i / (pointsNb - 1));
             prevPos[i] = pos[i];
             mass[i] = 1.0f;
         }
 
-        CreateAttach(0, transform);
-        if (attachedBody) CreateAttach(pointsNb - 1, attachedBody.transform);
-
         if (line) line.positionCount = pointsNb;
     }
 
-    public void CreateAttach(int point, Transform attach) {
-        if (point < 0 || point >= pointsNb){
-            Debug.LogError(string.Format("Point {0} is outside of points amount {1}",point,pointsNb));
-            return;
-        }
-        if (pointsAttach.ContainsKey(point)) {
-            pointsAttach[point] = attach;
-            pointsForce[point] = Vector3.zero;
-            return;
-        }
-
-        pointsAttach.Add(point, attach);
-        pointsForce.Add(point, Vector3.zero);
-    }
-
-    public void RemoveAttach(int point) {
-        if (pointsAttach.ContainsKey(point)) {
-            pointsAttach.Remove(point);
-            pointsForce.Remove(point);
-        } else {
-            Debug.LogError(string.Format("No point {0} in attached points",point));
-        }
-    }
-
-    private void ApplyAttach() {
-        Vector3 delta;
-        float distance;
-        float length;
-        float diff;
-        float invmass1;
-        float invmass2;
-        int previousPoint = -1;
-        foreach (int point in pointsAttach.Keys)
+    public void AttachPoint(int id, Transform attach) {
+        if (id < 0) id = attachedPoints.Count + id;
+        foreach (AttachedPoint point in attachedPoints)
         {
-            pos[point] = pointsAttach[point].position;
-
-            if (previousPoint >= 0) {
-                // pointsAttach should be ordered by id
-                delta = pos[point] - pos[previousPoint];
-                distance = constraintDistance * (point - previousPoint);
-                length = delta.magnitude;
-                invmass1 = InverseMass(mass[previousPoint]);
-                invmass2 = InverseMass(mass[point]);
-                diff = (length - distance) / (length * (invmass1 + invmass2));
-                
-                if (diff > 0.0f) {
-                    pointsForce[previousPoint] += delta * diff * invmass1;
-                    pointsForce[point] = -delta * diff * invmass2;
-                } else {
-                    pointsForce[point] = Vector3.zero;
-                }
-            } else {
-                pointsForce[point] = Vector3.zero;
+            if (point.id == id) {
+                point.transform = attach;
+                point.force = Vector3.zero;
+                return;
             }
-            previousPoint = point;
+        }
+        attachedPoints.Add(new AttachedPoint(id, attach));
+    }
+
+    public void DetachPoint(int id) {
+        if (id < 0) id = attachedPoints.Count + id;
+        int i = 0;
+        while (i < attachedPoints.Count) {
+            if (attachedPoints[i].id == id) {
+                attachedPoints.RemoveAt(i);
+                return;
+            }
         }
     }
 
-    private void ApplyForces() {
-        Rigidbody body;
-        foreach (int point in pointsAttach.Keys) {
-            body = pointsAttach[point].GetComponent<Rigidbody>();
-            if (body) {
-                mass[point] = body.mass;
-                body.velocity += pointsForce[point];
-                body.position += (body.velocity) * Time.deltaTime;
-            }
+    private float GetConstraint(int p1, int p2, float distance, Vector3[] constraint, bool useMass = true) {
+        Vector3 delta = pos[p2] - pos[p1];
+        float length = delta.magnitude;
+        float difference;
+        if (useMass) {
+            float invmass1 = InverseMass(mass[p1]);
+            float invmass2 = InverseMass(mass[p2]);
+            difference = (length - distance) / (length * (invmass1 + invmass2));
+            constraint[0] = delta * difference * invmass1;
+            constraint[1] = -delta * difference * invmass2;
+            return difference;
+        } else {
+            difference = (length - distance) / length;
+            constraint[0] = delta * difference * 0.5f;
+            constraint[1] = -delta * difference * 0.5f;
+            return difference;
         }
     }
 
@@ -145,21 +139,51 @@ public class VerletRope : MonoBehaviour
     }
 
     private void ApplyConstraints() {
-        Vector3 delta;
-        float length;
-        float diff;
-        float invmass1;
-        float invmass2;
-        for (int iteration = 0; iteration < constraintIterations; iteration++) {
+        Vector3[] constraint = new Vector3[2];
+        for (int iteration = 0; iteration < constraintDistanceIterations; iteration++) {
             for (int i = 1; i < pointsNb; i++) {
-                delta = pos[i] - pos[i - 1];
-                length = delta.magnitude;
-                invmass1 = InverseMass(mass[i - 1]);
-                invmass2 = InverseMass(mass[i]);
-                diff = (length - constraintDistance) / (length * (invmass1 + invmass2));
-                
-                pos[i - 1] += delta * diff * invmass1;
-                pos[i] -= delta * diff * invmass2;
+                pos[i].y = Mathf.Max(pos[i].y, constraintHeightMin);
+
+                float diff = GetConstraint(i-1, i, constraintDistance, constraint);
+                pos[i - 1] += constraint[0];
+                pos[i] += constraint[1];
+            }
+        }
+    }
+
+    private void ApplyAttach() {
+        Vector3[] constraint = new Vector3[2];
+        AttachedPoint previousPoint = null;
+        foreach (AttachedPoint point in attachedPoints){
+            if (!point.IsValid(pointsNb)) continue;
+
+            pos[point.id] = point.transform.position;
+            prevPos[point.id] = point.transform.position;
+            mass[point.id] = 0.0f;
+
+            if (previousPoint != null) {
+                int points = point.id - previousPoint.id;
+                float diff = GetConstraint(previousPoint.id, point.id, constraintDistance * points, constraint);
+                if (diff > 0.0f){
+                    previousPoint.force += constraint[0];
+                    point.force = constraint[1];
+                }
+            } else {
+                point.force = Vector3.zero;
+            }
+            previousPoint = point;
+        }
+    }
+
+    private void ApplyForces() {
+        Rigidbody body = null;
+        foreach (AttachedPoint point in attachedPoints) {
+            if (!point.IsValid(pointsNb)) continue;
+
+            body = point.transform.GetComponent<Rigidbody>();
+            if (body != null && !body.isKinematic) {
+                mass[point.id] = body.mass;
+                body.velocity += point.force * attachedBodiesDamping;
             }
         }
     }

@@ -32,10 +32,10 @@ public class DistanceConstraint : MonoBehaviour
         Vector3 move1 = vec * difference * invmass1;
         Vector3 move2 = vec * difference * invmass2;
         
-        if (!b1.isKinematic && move1.magnitude > 0.0f) {
+        if (!b1.isKinematic && difference > 0.0f) {
             b1.velocity += move1;
         }
-        if (!b2.isKinematic && move2.magnitude > 0.0f) {
+        if (!b2.isKinematic && difference > 0.0f) {
             b2.velocity -= move2;
         }
     }
