@@ -10,8 +10,6 @@ This is an attempt at creating ropes in Unity, with the following criterions:
 
 With those set, I had 3 approaches - **distance, joints and verlet**
 
-https://user-images.githubusercontent.com/39198556/203888142-bf2e57d7-d173-4f08-856b-800a8a7f9667.mp4
-
 ### Distance Rope
 I use multiple rigidbodies that I chain together using a custom DistanceConstraint script.
 Sadly the way the distance constraint affected the rigidbodies made it extremely unstable.
