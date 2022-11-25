@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 public class VerletRopeHook : MonoBehaviour
 {
     public VerletRope grabRope;
+    [SerializeField] private float hookMass = 2.0f;
 
     [SerializeField] private InputActionProperty releaseAction;
 
@@ -26,6 +27,9 @@ public class VerletRopeHook : MonoBehaviour
     private void Update() {
         if (grabRope != null) {
             transform.position = grabRope.pos[ropePointID];
+            if (hookedPoint == null) {
+                grabRope.mass[ropePointID] = hookMass;
+            }
         }
     }
 

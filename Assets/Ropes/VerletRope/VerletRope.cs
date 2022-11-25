@@ -7,7 +7,8 @@ public class VerletRope : MonoBehaviour
     public int pointsNb = 20;
     
     [System.Serializable]
-    public class AttachedPoint {
+    public class AttachedPoint
+    {
         public int id = 0;
         public Transform transform;
         [HideInInspector] public Vector3 force = Vector3.zero;
@@ -83,15 +84,20 @@ public class VerletRope : MonoBehaviour
     }
 
     public AttachedPoint AttachPoint(int id, Transform attach) {
-        foreach (AttachedPoint point in attachedPoints)
+        AttachedPoint newPoint = new AttachedPoint(id, attach);
+        AttachedPoint point;
+        for (int i = 0; i < attachedPoints.Count; i++)
         {
+            point = attachedPoints[i];
             if (point.id == id) {
                 point.transform = attach;
                 point.force = Vector3.zero;
                 return point;
+            } else if (point.id > id) {
+                attachedPoints.Insert(i, newPoint);
+                return newPoint;
             }
         }
-        AttachedPoint newPoint = new AttachedPoint(id, attach);
         attachedPoints.Add(newPoint);
         return newPoint;
     }
@@ -102,7 +108,6 @@ public class VerletRope : MonoBehaviour
     }
 
     public void DetachPoint(int id) {
-        int i = 0;
         foreach (AttachedPoint point in attachedPoints)
         {
             if (point.id == id) {
@@ -205,7 +210,6 @@ public class VerletRope : MonoBehaviour
             if (body != null && !body.isKinematic) {
                 mass[point.id] = body.mass;
                 body.velocity += point.force * attachedBodiesDamping;
-                //body.position += point.force;
             }
         }
     }
