@@ -1,4 +1,4 @@
-# Unity Workshop - Rope physics
+[![Unity Workshop - Rope physics](https://img.youtube.com/vi/c_3EkMhrjLM/hqdefault.jpg)](https://youtu.be/c_3EkMhrjLM)
 
 This is an attempt at creating ropes in Unity, with the following criterions:
 - be affected by gravity
@@ -9,12 +9,16 @@ This is an attempt at creating ropes in Unity, with the following criterions:
 - stay stable when applying tension
 
 With those set, I had 3 approaches - **distance, joints and verlet**
+
+https://user-images.githubusercontent.com/39198556/203888142-bf2e57d7-d173-4f08-856b-800a8a7f9667.mp4
+
 ### Distance Rope
 I use multiple rigidbodies that I chain together using a custom DistanceConstraint script.
 Sadly the way the distance constraint affected the rigidbodies made it extremely unstable.
 
 **Pros:**
 - interacts with Unity physics (rigidbodies and Colliders)
+- distance constraint more lightweight than joints
 
 **Cons:**
 - extremely unstable in all scenarios
@@ -42,10 +46,14 @@ to the rope and have them affect it, but the results are not perfect.
 
 **Cons:**
 - doesn't interact with Unity physics out of the box
-- O(n + n*k) where *n* is the number of points and *k* the number of iterations of the constraints, which can become very intensive at higher numbers
-
-This is the solution I went with.
+- a lot more calculations for a little more rigidity
 
 ## Adapting to VR
 
-The second objective I had with this workshop was a way to use this rope in VR. The initial plan was to be able to use it as a way of locomotion, by throwing then pulling it, but it ended up being too complex for the short time I had and my limited knowledge of the XR Interaction Toolkit. I ended up focusing on the interaction between the rope and other rigidbodies in the scene, by making a hook system.
+The second objective I had with this workshop was a way to use this rope in VR.
+
+I ended up choosing the Verlet rope as a base, since it was not only the most stable but also the most performant: I would get a noticeable amount of fps drops on Quest 2 when using a JointsRope while the VerletRope didn't cause significant fps drops with a higher number of points. Of course, this is probably due to the fact that the VerletRope doesn't interact with Unity's physics.
+
+The initial plan was to be able to use it as a way of locomotion, by throwing then pulling it, but it ended up being too complex for the short time I had and my limited knowledge of the XR Interaction Toolkit. I chose to focus on the interaction between the rope and other rigidbodies in the scene and work with my limitations by making it a hook system.
+
+The end result works pretty well, although it may need a rework to allow for rewinding/extending the rope !
